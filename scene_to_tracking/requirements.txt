@@ -1,0 +1,14 @@
+# scene_to_tracking: CPU-only, no GPU / deep-learning framework required.
+# Versions are those of the Python 3.10 environment the authors used for the
+# scene_reconstruction stage (which also contains every package imported here).
+numpy==1.26.4
+scipy==1.15.3
+trimesh==4.11.1
+opencv-python==4.13.0.90
+# rainbow_visualizer.py calls matplotlib.cm.get_cmap(), which is deprecated
+# since 3.7 and scheduled for removal in 3.11 -> keep matplotlib < 3.11.
+matplotlib==3.10.8
+Pillow==11.3.0
+imageio==2.37.2
+# imageio needs the ffmpeg backend to write H.264 (libx264) mp4 files.
+imageio-ffmpeg==0.6.0

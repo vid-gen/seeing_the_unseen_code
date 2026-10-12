@@ -1,0 +1,22 @@
+# Versions of the environment used to train / evaluate the released model
+# (Python 3.10.12, CUDA 12.4, 4x NVIDIA H200).
+# torch_scatter must match your torch / CUDA build, e.g.
+#   pip install torch_scatter -f https://data.pyg.org/whl/torch-2.6.0+cu124.html
+
+# --- training / inference (train_pyg*.py, inference_pyg.py, models/) ---
+torch==2.6.0
+torch_geometric==2.7.0
+torch_scatter==2.1.2
+numpy==2.2.6
+scipy==1.15.3
+h5py==3.15.1
+matplotlib==3.10.8
+imageio==2.37.2
+trimesh==4.11.1        # imported at module level by utils_geom.py
+ipdb==0.13.13          # imported at module level by utils_geom.py
+
+# --- preprocessing only (preprocessing/) ---
+opencv-python-headless==4.13.0.90
+pyyaml==6.0.3
+tqdm==4.67.1
+scikit-learn==1.7.2

@@ -1,0 +1,69 @@
+# Upstream VideoX-Fun requirements (aigc-apps/VideoX-Fun@54bf97a, unchanged).
+Pillow
+einops
+safetensors
+timm
+tomesd
+librosa
+torch>=2.1.2
+torchdiffeq
+torchsde
+decord
+datasets
+numpy
+scikit-image
+opencv-python
+omegaconf
+SentencePiece
+albumentations
+imageio[ffmpeg]
+imageio[pyav]
+tensorboard
+beautifulsoup4
+ftfy
+func_timeout
+onnxruntime
+accelerate>=0.25.0
+gradio>=3.41.2
+diffusers>=0.30.1
+transformers>=4.46.2
+
+#
+# ---------------------------------------------------------------------------
+# Versions of the environment used to train and run the released checkpoint
+# (Python 3.10.12, CUDA 12.4, 2x NVIDIA H200). Listed for reference only;
+# install torch/torchvision from the matching CUDA wheel index first, e.g.
+#   pip install torch==2.5.1 torchvision==0.20.1 --index-url https://download.pytorch.org/whl/cu124
+#
+# torch==2.5.1+cu124
+# torchvision==0.20.1+cu124
+# diffusers==0.37.1
+# transformers==5.5.0
+# accelerate==1.13.0
+# deepspeed==0.18.9            (installed, not used by the released recipe)
+# flash_attn==2.7.4.post1      (optional)
+# peft==0.18.1
+# decord==0.6.0
+# opencv-python==4.13.0.92
+# omegaconf==2.3.0
+# safetensors==0.7.0
+# einops==0.8.2
+# numpy==2.2.6
+# pillow==12.1.1
+# imageio==2.37.3
+# imageio-ffmpeg==0.6.0
+# av==17.0.0
+# func_timeout==4.3.5
+# sentencepiece==0.2.1
+# ftfy==6.3.1
+# timm==1.0.26
+# tomesd==0.1.3
+# scikit-image==0.25.2
+# datasets==4.8.4
+# tensorboard==2.20.0
+# beautifulsoup4==4.14.3
+# albumentations==2.0.8
+# librosa==0.11.0
+# onnxruntime==1.23.2
+# torchdiffeq==0.2.5
+# torchsde==0.2.6

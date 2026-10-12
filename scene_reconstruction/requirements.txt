@@ -1,0 +1,42 @@
+# Python 3.10, CUDA 12.1. Versions come from the environment used for the paper runs.
+#
+# Install order:
+#   1. Install SAM-3D-Objects (upstream commit 81a8237 + patches/sam3d_objects.patch) as
+#      described in its doc/setup.md. That step installs torch 2.5.1+cu121, pytorch3d,
+#      kaolin, gsplat, MoGe, spconv, xformers, etc. (see README.md).
+#   2. pip install -r requirements.txt
+#   3. Install torch_scatter / torch_geometric wheels that match your torch/CUDA build:
+#      pip install torch_scatter -f https://data.pyg.org/whl/torch-2.5.1+cu121.html
+#
+# The list below only contains top-level packages imported by this module (and by the
+# GNS rollout code it calls in ../gns_training). Versions are pinned to the paper environment.
+
+# --- deep learning (normally installed by the SAM-3D-Objects setup) ---
+torch==2.5.1
+transformers==5.0.0          # Sam3Model / Sam3Processor (facebook/sam3) need transformers >= 5
+utils3d==1.6                 # MoGe helper used by SAM-3D-Objects
+
+# --- GNS rollout (imported from ../gns_training) ---
+torch_geometric==2.7.0
+torch_scatter==2.1.2         # build matching torch 2.5.1 + cu121 (see step 3 above)
+ipdb==0.13.13                # imported at module level by ../gns_training/utils_geom.py (upstream file)
+
+# --- geometry / meshes ---
+numpy==1.26.4
+scipy==1.15.3
+trimesh==4.11.1
+pymeshfix==0.18.0
+pymeshlab==2025.7.post1
+open3d==0.18.0
+plyfile==1.1.3
+h5py==3.15.1
+
+# --- images / visualization ---
+pillow==11.3.0
+opencv-python==4.13.0.90
+imageio==2.37.2
+matplotlib==3.10.8
+
+# --- OpenAI (GPT object detection + initial-velocity inference; optional with --no-gpt) ---
+openai==2.16.0
+requests==2.32.5

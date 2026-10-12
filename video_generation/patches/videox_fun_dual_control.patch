@@ -1,0 +1,82 @@
+diff --git a/videox_fun/data/dataset_image_video.py b/videox_fun/data/dataset_image_video.py
+index f95e7d4..6a6e9d3 100755
+--- a/videox_fun/data/dataset_image_video.py
++++ b/videox_fun/data/dataset_image_video.py
+@@ -462,7 +462,44 @@ class ImageVideoControlDataset(Dataset):
+                     else:
+                         control_pixel_values = np.zeros_like(pixel_values)
+                 control_camera_values = None
+-            
++
++            # Load second control video if available (for dual tracking)
++            control_video_id_2 = data_info.get('control_file_path_2', None)
++            if control_video_id_2 is not None:
++                if self.data_root is not None:
++                    control_video_id_2 = os.path.join(self.data_root, control_video_id_2)
++                with VideoReader_contextmanager(control_video_id_2, num_threads=2) as control_video_reader_2:
++                    try:
++                        sample_args = (control_video_reader_2, batch_index)
++                        control_pixel_values_2 = func_timeout(
++                            VIDEO_READER_TIMEOUT, get_video_reader_batch, args=sample_args
++                        )
++                        resized_frames = []
++                        for i in range(len(control_pixel_values_2)):
++                            frame = control_pixel_values_2[i]
++                            resized_frame = resize_frame(frame, self.larger_side_of_image_and_video)
++                            resized_frames.append(resized_frame)
++                        control_pixel_values_2 = np.array(resized_frames)
++                    except FunctionTimedOut:
++                        raise ValueError(f"Read {idx} control_2 timeout.")
++                    except Exception as e:
++                        raise ValueError(f"Failed to extract frames from control video 2. Error is {e}.")
++
++                    if not self.enable_bucket:
++                        control_pixel_values_2 = torch.from_numpy(control_pixel_values_2).permute(0, 3, 1, 2).contiguous()
++                        control_pixel_values_2 = control_pixel_values_2 / 255.
++                        del control_video_reader_2
++                    else:
++                        control_pixel_values_2 = control_pixel_values_2
++
++                    if not self.enable_bucket:
++                        control_pixel_values_2 = self.video_transforms(control_pixel_values_2)
++            else:
++                if not self.enable_bucket:
++                    control_pixel_values_2 = torch.zeros_like(pixel_values)
++                else:
++                    control_pixel_values_2 = np.zeros_like(pixel_values)
++
+             if self.enable_subject_info:
+                 if not self.enable_bucket:
+                     visual_height, visual_width = pixel_values.shape[-2:]
+@@ -492,7 +529,7 @@ class ImageVideoControlDataset(Dataset):
+             else:
+                 subject_image = None
+ 
+-            return pixel_values, control_pixel_values, subject_image, control_camera_values, text, "video"
++            return pixel_values, control_pixel_values, control_pixel_values_2, subject_image, control_camera_values, text, "video"
+         else:
+             image_path, text = data_info['file_path'], data_info['text']
+             if self.data_root is not None:
+@@ -548,7 +585,7 @@ class ImageVideoControlDataset(Dataset):
+             else:
+                 subject_image = None
+ 
+-            return image, control_image, subject_image, None, text, 'image'
++            return image, control_image, None, subject_image, None, text, 'image'
+ 
+     def __len__(self):
+         return self.length
+@@ -564,10 +601,12 @@ class ImageVideoControlDataset(Dataset):
+                 if data_type_local != data_type:
+                     raise ValueError("data_type_local != data_type")
+ 
+-                pixel_values, control_pixel_values, subject_image, control_camera_values, name, data_type = self.get_batch(idx)
++                pixel_values, control_pixel_values, control_pixel_values_2, subject_image, control_camera_values, name, data_type = self.get_batch(idx)
+ 
+                 sample["pixel_values"] = pixel_values
+                 sample["control_pixel_values"] = control_pixel_values
++                if control_pixel_values_2 is not None:
++                    sample["control_pixel_values_2"] = control_pixel_values_2
+                 sample["subject_image"] = subject_image
+                 sample["text"] = name
+                 sample["data_type"] = data_type

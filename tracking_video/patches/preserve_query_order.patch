@@ -1,0 +1,66 @@
+diff --git a/models/SpaTrackV2/models/SpaTrack.py b/models/SpaTrackV2/models/SpaTrack.py
+index c5f43c0..c4d7220 100644
+--- a/models/SpaTrackV2/models/SpaTrack.py
++++ b/models/SpaTrackV2/models/SpaTrack.py
+@@ -145,8 +145,9 @@ class SpaTrack2(nn.Module, PyTorchModelHubMixin):
+             replace_ratio: float = 0.6,
+             annots_train: Dict = None,
+             iters_track=4,
++            preserve_query_order: bool = False,
+             **kwargs,
+-    ):  
++    ):
+         # step 1 allocate the query points on the grid
+         T, C, H, W = video.shape
+ 
+@@ -297,6 +298,7 @@ class SpaTrack2(nn.Module, PyTorchModelHubMixin):
+                                 support_frame=segment.shape[1]-1,
+                                 cache=cache, replace_ratio=replace_ratio,
+                                 iters_track=iters_track,
++                                preserve_query_order=preserve_query_order,
+                                 **kwargs, annots=annots)
+             if self.training:
+                 loss += out["loss"].squeeze()
+@@ -613,10 +615,13 @@ class SpaTrack2(nn.Module, PyTorchModelHubMixin):
+                     pts_q_3d[...,2] *= H_resize / H
+                 else:
+                     # adjust the query with uncertainty
+-                    if (full_point==False) and (overlap_d is None):
++                    # NOTE: 过滤 + 随机 pad 会破坏 pts_q 的 N 维度顺序, 与外层 sorted_inv_indices 反排冲突.
++                    # 若调用方设置 preserve_query_order=True (通过 kwargs 传入), 跳过这段逻辑保留原 query 对应关系.
++                    preserve_query_order = kwargs.get('preserve_query_order', False)
++                    if (full_point==False) and (overlap_d is None) and (not preserve_query_order):
+                         pts_q_unc = sample_features5d(unc_metric[None], pts_q).squeeze()
+                         pts_q = pts_q[:,:,pts_q_unc>0.5,:]
+-                        if (pts_q_unc<0.5).sum() > 0:
++                        if (pts_q_unc<0.5).sum() > 0 and pts_q.shape[2] > 0:
+                             # pad the query points
+                             pad_num = pts_q_unc.shape[0] - pts_q.shape[2]
+                             # pick the random indices
+diff --git a/models/SpaTrackV2/models/predictor.py b/models/SpaTrackV2/models/predictor.py
+index b331041..4512b6b 100644
+--- a/models/SpaTrackV2/models/predictor.py
++++ b/models/SpaTrackV2/models/predictor.py
+@@ -37,9 +37,10 @@ class Predictor(torch.nn.Module, PyTorchModelHubMixin):
+                  intrs: str|torch.Tensor|np.ndarray=None,
+                  extrs: str|torch.Tensor|np.ndarray=None,
+                  queries=None, queries_3d=None, iters_track=4,
+-                 full_point=False, fps=30, track2d_gt=None, 
++                 full_point=False, fps=30, track2d_gt=None,
+                  fixed_cam=False, query_no_BA=False, stage=0,
+-                 support_frame=0, replace_ratio=0.6):
++                 support_frame=0, replace_ratio=0.6,
++                 preserve_query_order=False):
+         """
+         video: this could be a path to a video, a tensor of shape (T, C, H, W) or a numpy array of shape (T, C, H, W)
+         queries: (B, N, 2)
+@@ -83,7 +84,8 @@ class Predictor(torch.nn.Module, PyTorchModelHubMixin):
+             ret = self.spatrack.forward_stream(video, queries, T_org=T_,
+                                                 depth=depth, intrs=intrs, unc_metric_in=unc_metric, extrs=extrs, queries_3d=queries_3d,
+                                                 window_len=self.S_wind, overlap_len=self.overlap, track2d_gt=track2d_gt, full_point=full_point, iters_track=iters_track,
+-                                                fixed_cam=fixed_cam, query_no_BA=query_no_BA, stage=stage, support_frame=support_frame, replace_ratio=replace_ratio) + (video[:T_],)
++                                                fixed_cam=fixed_cam, query_no_BA=query_no_BA, stage=stage, support_frame=support_frame, replace_ratio=replace_ratio,
++                                                preserve_query_order=preserve_query_order) + (video[:T_],)
+             
+         return ret
+ 

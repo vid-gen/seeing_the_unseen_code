@@ -1,0 +1,34 @@
+diff --git a/notebook/inference.py b/notebook/inference.py
+index 94e99a7..1a5036f 100644
+--- a/notebook/inference.py
++++ b/notebook/inference.py
+@@ -104,6 +104,7 @@ class Inference:
+         mask: Optional[Union[None, Image.Image, np.ndarray]],
+         seed: Optional[int] = None,
+         pointmap=None,
++        with_layout_postprocess=False,
+     ) -> dict:
+         image = self.merge_mask_to_rgba(image, mask)
+         return self._pipeline.run(
+@@ -113,7 +114,7 @@ class Inference:
+             stage1_only=False,
+             with_mesh_postprocess=False,
+             with_texture_baking=False,
+-            with_layout_postprocess=False,
++            with_layout_postprocess=with_layout_postprocess,
+             use_vertex_color=True,
+             stage1_inference_steps=None,
+             pointmap=pointmap,
+diff --git a/sam3d_objects/model/backbone/tdfy_dit/renderers/gaussian_render.py b/sam3d_objects/model/backbone/tdfy_dit/renderers/gaussian_render.py
+index a72c46a..08a02f3 100755
+--- a/sam3d_objects/model/backbone/tdfy_dit/renderers/gaussian_render.py
++++ b/sam3d_objects/model/backbone/tdfy_dit/renderers/gaussian_render.py
+@@ -189,7 +189,7 @@ def render(
+             Ks=Ks,
+             width=int(viewpoint_camera.image_width),
+             height=int(viewpoint_camera.image_height),
+-            backgrounds=bg_color,
++            backgrounds=bg_color.unsqueeze(0),  # [3] -> [1, 3] for gsplat batch dim
+         )
+         rendered_image = render_colors.squeeze(0).permute(
+             2, 0, 1
